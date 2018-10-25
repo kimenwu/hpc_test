@@ -31,6 +31,8 @@ public:
 	virtual ~pthread_master();
 	virtual void exit();
 	virtual bool init();
+	virtual int get_number_of_worker();
+	virtual bool send_request_pdu(request_pdu_t*, int);
 };
 
 #endif /* PTHREAD_MASTER_H_ */

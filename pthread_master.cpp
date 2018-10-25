@@ -37,6 +37,11 @@ bool pthread_master::init()
 	return ret;
 }
 
+int pthread_master::get_number_of_worker()
+{
+	return PTHREAD_WORKER_CNT;
+}
+
 void pthread_master::exit_workers()
 {
 	parallel_worker *p_worker = NULL;
@@ -72,6 +77,11 @@ err:
 	//clear all worker has been created
 	exit_workers();
 	return ret;
+}
+
+bool pthread_master::send_request_pdu(request_pdu_t*, int)
+{
+	return true;
 }
 
 #endif

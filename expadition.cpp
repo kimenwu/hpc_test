@@ -1,7 +1,6 @@
 /*
  * expadition.cpp
  *
- *  Created on: 2018Äê10ÔÂ19ÈÕ
  */
 #include <iostream>
 #include <string>

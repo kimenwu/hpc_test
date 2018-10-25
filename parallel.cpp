@@ -239,13 +239,15 @@ int main(int argc,char **argv){
 	int T = cfg.get_run_period();
 	b_master = is_master();
 	if(b_master){
+
 		p_master = create_master();
 		if(!p_master){
 			parallel_error("create master failed");
 			errcode = -1;
 			goto err;
 		}
-		errcode = p_master->run(T,cfg.get_expaditions());
+
+		errcode = p_master->run(T,cfg.get_expaditions(),cfg.get_expaditon_cnt());
 	}else{
 		//else the thread is worker
 		worker = create_worker();

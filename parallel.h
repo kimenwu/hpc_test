@@ -13,6 +13,7 @@ typedef enum request_op_code
 	REQUEST_DO_WALK = 1,
 	REQUEST_RE_DISPATCH,
 	REQUEST_GET_STAT,
+	REQUEST_PRE_START,
 
 }request_op_code_t;
 
@@ -24,9 +25,10 @@ typedef struct request_pdu_s
 typedef enum response_code_s
 {
 	RESPONSE_WALK_FIN = 1,
-	RESPONSE_CONFLICT_DETECT_FIN,
+	RESPONSE_GET_STAT_FIN,
 	RESPONSE_RE_DISPATCH,
 	RESPONSE_STAT_INFO,
+	RESPONSE_READY,
 } response_code_t;
 
 /**

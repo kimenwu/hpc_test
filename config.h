@@ -32,7 +32,7 @@ public:
 	int get_run_period();
 	void dump_all_expaditions();
 
-	list<expadition> get_expaditions()
+	list<expadition>& get_expaditions()
 	{
 		return m_expaditions;
 	}
