@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+pthread_test
+mpi_test
+
+#ide temporay file
+.settings
+.cproject
+.project
+.vs
+ref.txt
