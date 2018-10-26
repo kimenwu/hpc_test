@@ -84,4 +84,9 @@ bool pthread_master::send_request_pdu(request_pdu_t*, int)
 	return true;
 }
 
+bool pthread_master::receive_response_pdu(response_pdu_t &response_pdu)
+{
+	return true;
+}
+
 #endif

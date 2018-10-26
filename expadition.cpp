@@ -10,7 +10,8 @@
 
 expadition::expadition()
 {
-
+	m_status = EXP_STATUS_LIVE;
+	m_left_step = 0;
 }
 
 expadition::~expadition()
@@ -50,6 +51,11 @@ int expadition::direction_s2i(const string str_direction)
 	}
 
 	return ret;
+}
+
+string expadition::direction_tostring()
+{
+	return string(direction_i2s(m_direction));
 }
 
 /**

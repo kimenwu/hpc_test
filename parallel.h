@@ -14,12 +14,20 @@ typedef enum request_op_code
 	REQUEST_RE_DISPATCH,
 	REQUEST_GET_STAT,
 	REQUEST_PRE_START,
+	REQUEST_STOP,
 
 }request_op_code_t;
 
 typedef struct request_pdu_s
 {
 	request_op_code_t op;
+	int id;
+	int left_step;
+	int status;
+	int x;
+	int y;
+	int direction;
+
 }request_pdu_t;
 
 typedef enum response_code_s
@@ -29,6 +37,7 @@ typedef enum response_code_s
 	RESPONSE_RE_DISPATCH,
 	RESPONSE_STAT_INFO,
 	RESPONSE_READY,
+	RESPONSE_STOPPED,
 } response_code_t;
 
 /**
@@ -38,6 +47,12 @@ typedef enum response_code_s
 typedef struct response_pdu_s
 {
 	int ret_code;
+	int id;
+	int left_step;
+	int status;
+	int x;
+	int y;
+	int direction;
 } response_pdu_t;
 
 

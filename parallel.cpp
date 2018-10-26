@@ -248,6 +248,10 @@ int main(int argc,char **argv){
 		}
 
 		errcode = p_master->run(T,cfg.get_expaditions(),cfg.get_expaditon_cnt());
+		if(errcode){
+			parallel_error("run the paralle task error");
+		}
+		p_master->stop();
 	}else{
 		//else the thread is worker
 		worker = create_worker();
@@ -256,6 +260,8 @@ int main(int argc,char **argv){
 			errcode = -1;
 			goto err;
 		}
+
+		//The work must stop by master.
 		errcode = worker->run();
 	}
 

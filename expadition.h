@@ -13,6 +13,7 @@
 
 using namespace std;
 
+#define EXP_STATUS_LIVE (1)
 
 class expadition
 {
@@ -22,6 +23,18 @@ public:
 	int m_speed;
 	int m_direction;
 	int m_id;
+
+	/**
+	 * the status of a expadition.this is use to stor runtime staus like live or
+	 * dead because of conflict with the other expaditon.
+	 */
+	int m_status;
+
+	/*
+	 * how many steps must be walk left in a second.
+	 * the origin value equal to m_speed
+	 */
+	int m_left_step;
 
 
 private:
@@ -40,6 +53,8 @@ public:
 	expadition();
 	expadition(int x, int y,const string str_direction,int speed,int id);
 	~expadition();
+
+	string direction_tostring();
 
 	int get_id()
 	{
