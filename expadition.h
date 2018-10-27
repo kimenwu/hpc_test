@@ -16,6 +16,7 @@
 using namespace std;
 
 #define EXP_STATUS_LIVE (1)
+#define EXP_INVALID_ID (-1)
 
 class expadition
 {
@@ -30,14 +31,6 @@ public:
 	 * dead because of conflict with the other expaditon.
 	 */
 	int m_status;
-
-	/*
-	 * how many steps must be walk left in a second.
-	 * the origin value equal to m_speed
-	 */
-	int m_left_step;
-
-
 private:
 
 	/**
@@ -53,6 +46,7 @@ private:
 public:
 	expadition();
 	expadition(int x, int y,const string str_direction,int speed,int id);
+	expadition(expadition_attribute_t &attr);
 	~expadition();
 
 	string direction_tostring();
@@ -62,6 +56,12 @@ public:
 		return m_id;
 	}
 
+	int get_indx()
+	{
+		return m_y*MAX_X_RANGE + m_x;
+	}
+
+	void do_walk();
 	/**
 //	 * Print all property of a expaditon
 	 */

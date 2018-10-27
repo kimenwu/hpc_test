@@ -17,8 +17,8 @@ private:
 	pthread_t m_pthread_id;
 	static void *thread_routine(void *arg);
 protected:
-	virtual bool receive_request_pdu(request_pdu_t &request);
-
+	virtual bool receive_request_pdu(request_pdu_t *p_request,int size);
+	virtual bool send_response_pdu(response_pdu_t &response);
 public:
 	pthread_worker();
 	~pthread_worker();

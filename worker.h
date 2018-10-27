@@ -8,16 +8,23 @@
 #define WORKER_H_
 
 #include "parallel.h"
+#include "execinfo.h"
+
+#define DEFAULT_OBJ_CNT (1)
 
 class parallel_worker
 {
 private:
+	int m_next_pdu_obj_cnt;
 	bool process_request(request_pdu_t &request);
 	void do_stop();
+	bool do_walk(request_pdu_t &request);
+	void do_cleanup();
+	bool do_conflict_detect(request_pdu_t &request);
 
 protected:
-	virtual bool receive_request_pdu(request_pdu_t &request) = 0;
-
+	virtual bool receive_request_pdu(request_pdu_t *p_request,int size) = 0;
+	virtual bool send_response_pdu(response_pdu_t &response) =0;
 public:
 	parallel_worker();
 	virtual ~parallel_worker();

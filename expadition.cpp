@@ -8,14 +8,25 @@
 #include "expadition.h"
 #include "parallel.h"
 
+
 expadition::expadition()
 {
 	m_status = EXP_STATUS_LIVE;
-	m_left_step = 0;
 }
 
 expadition::~expadition()
 {
+}
+
+expadition::expadition(expadition_attribute_t &attr)
+{
+	expadition();
+	m_direction = attr.direction;
+	m_id		= attr.id;
+	m_speed 	= attr.speed;
+	m_status	= attr.status;
+	m_x			= attr.x;
+	m_y			= attr.y;
 }
 
 
@@ -82,8 +93,13 @@ void expadition::copy_to_attribute(expadition_attribute_t *p_attr)
 {
 	p_attr->direction	= m_direction;
 	p_attr->id			= m_id;
-	p_attr->left_step	= m_left_step;
+	p_attr->speed		= m_speed;
 	p_attr->status		= m_status;
 	p_attr->x			= m_x;
 	p_attr->y			= m_y;
+}
+
+void expadition::do_walk()
+{
+
 }

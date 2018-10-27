@@ -45,7 +45,7 @@ bool parallel_master::dispatch_walk_job(expadition &expa,int rank)
 	expadition_attribute_t *p_obj = &request.obj;
 
 	p_obj->direction	= expa.m_direction;
-	p_obj->left_step	= expa.m_left_step;
+	p_obj->speed		= expa.m_speed;
 	p_obj->id			= expa.m_id;
 	p_obj->x			= expa.m_x;
 	p_obj->y			= expa.m_y;
@@ -116,7 +116,7 @@ parallel_master::stor_expadition(list<expadition> &expaditions,response_pdu_t &r
 		goto out;
 	}
 
-	p_expa->m_left_step	= p_obj->left_step;
+	p_expa->m_speed		= p_obj->speed;
 	p_expa->m_x			= p_obj->x;
 	p_expa->m_y			= p_obj->y;
 	p_expa->m_direction = p_obj->direction;
@@ -252,6 +252,7 @@ bool parallel_master::conflict_detect()
 {
 	bool ret = true;
 	request_pdu_t *p_req = NULL;
+	request_pdu_t req_next_size;
 	int attr_size = 0;
 	expadition_attribute_t *p_attr=NULL;
 	int rank = 0;
@@ -261,23 +262,29 @@ bool parallel_master::conflict_detect()
 	//reset rank number
 	m_curr_rank = 1;
 	for(auto item:m_state){
-		attr_size = (item.second.size()-1)*sizeof(expadition_attribute_t);
-		p_req = (request_pdu_t *)malloc(sizeof(request_pdu_t)+attr_size);
-		p_req->op = REQUEST_CONFLICT_DETECT;
-
-		p_attr = p_req->objs;
-		for(auto& exp:item.second){
-			exp->copy_to_attribute(p_attr);
-			p_attr++;
-		}
-
 		rank = get_worker_rank();
-		if(!send_request_pdu(p_req,rank)){
+		req_next_size.op = REQUEST_NEXT_PDU_SIZE;
+		req_next_size.obj_cnt = item.second.size();
+
+		if(!send_request_pdu(&req_next_size,rank)){
 			parallel_error("send request error[rank:%d]",rank);
 			ret = false;
 			goto out;
 		}
 
+		attr_size = (item.second.size()-1)*sizeof(expadition_attribute_t);
+		p_req = (request_pdu_t *)malloc(sizeof(request_pdu_t)+attr_size);
+		p_req->op = REQUEST_CONFLICT_DETECT;
+
+		p_attr = p_req->objs;
+		p_attr->indx = item.first;
+		for(auto& exp:item.second){
+			exp->copy_to_attribute(p_attr);
+			p_attr++;
+		}
+
+		free(p_req);
+		p_req = NULL;
 		unfinished++;
 	}
 

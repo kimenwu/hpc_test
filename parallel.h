@@ -12,6 +12,7 @@ typedef enum request_op_code
 {
 	REQUEST_DO_WALK = 1,
 	REQUEST_CONFLICT_DETECT,
+	REQUEST_NEXT_PDU_SIZE,
 	REQUEST_PRE_START,
 	REQUEST_STOP,
 
@@ -19,7 +20,8 @@ typedef enum request_op_code
 
 typedef struct expadition_attribute{
 	int id;
-	int left_step;
+	int indx;
+	int speed;
 	int status;
 	int x;
 	int y;

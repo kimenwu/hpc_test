@@ -23,7 +23,6 @@ private:
 	int m_curr_rank;
 	unordered_map<int,vector<expadition *>> m_state;
 	typedef typename unordered_map<int,vector<expadition *>>::iterator iterator_t;
-
 private:
 	int get_worker_rank();
 
