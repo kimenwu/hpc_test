@@ -99,7 +99,108 @@ void expadition::copy_to_attribute(expadition_attribute_t *p_attr)
 	p_attr->y			= m_y;
 }
 
+void expadition::redirection()
+{
+int number_of_times = 0;
+
+	//We need do check twice
+	//first redirection maybe encounter another bondary
+retry:
+	number_of_times++;
+	switch (m_direction) {
+	case DIRC::u:
+		if (m_y == MAX_Y_RANGE) {
+			m_direction = DIRC::rd;
+		}
+		break;
+	case DIRC::d:
+		if (m_y == 1) {
+			m_direction = DIRC::lu;
+		}
+		break;
+	case DIRC::l:
+		if (m_x == 1) {
+			m_direction = DIRC::ru;
+		}
+		break;
+	case DIRC::r:
+		if (m_x == MAX_X_RANGE) {
+			m_direction = DIRC::ld;
+		}
+		break;
+	case DIRC::lu:
+		if (m_x == 1 || m_y == MAX_Y_RANGE) {
+			m_direction = DIRC::r;
+		}
+		break;
+	case DIRC::ld:
+		if (m_x == 1 || m_y == 1) {
+			m_direction = DIRC::u;
+		}
+		break;
+	case DIRC::ru:
+		if (m_x == MAX_X_RANGE || m_y == MAX_Y_RANGE) {
+			m_direction = DIRC::d;
+		}
+		break;
+	case DIRC::rd:
+		if (m_x == MAX_Y_RANGE || m_y == 1) {
+			m_direction = DIRC::l;
+		}
+		break;
+	default:
+		break;
+	}
+
+	if(!number_of_times)
+		goto retry;
+}
+
+void expadition::do_walk_once()
+{
+	//need redirection?
+	redirection();
+
+	switch (m_direction) {
+	case DIRC::u:
+		m_y++;
+		break;
+	case DIRC::d:
+		m_y--;
+		break;
+	case DIRC::l:
+		m_x--;
+		break;
+	case DIRC::r:
+		m_x++;
+		break;
+	case DIRC::lu:
+		m_x--;
+		m_y++;
+		break;
+	case DIRC::ld:
+		m_x--;
+		m_y--;
+		break;
+	case DIRC::ru:
+		m_x++;
+		m_y++;
+		break;
+	case DIRC::rd:
+		m_x++;
+		m_y--;
+		break;
+	default:
+		break;
+	}
+}
+
 void expadition::do_walk()
 {
+	int steps = m_speed;
 
+	while(steps){
+		do_walk_once();
+		steps--;
+	}
 }

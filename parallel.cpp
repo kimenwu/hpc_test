@@ -18,8 +18,6 @@
 
 using namespace std;
 
-enum DIRC {u,l,lu,ld,d,r,rd,ru};
-
 class Piece{
 	public:
 		Piece(int inx,int iny,string str,int s){

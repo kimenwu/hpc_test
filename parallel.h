@@ -76,6 +76,7 @@ typedef struct response_pdu_s
 	};
 } response_pdu_t;
 
+enum DIRC {u,l,lu,ld,d,r,rd,ru};
 
 #define DEFAULT_CONFIG_PATH "input.txt"
 #define MAX_X_RANGE (1600)
