@@ -272,17 +272,5 @@ int main(int argc,char **argv){
 	}
 err:
 	return errcode;
-
-	ifstream input("input.txt");
-	int tmpx,tmpy,tmps;
-	string str;
-	input >> T;
-	while(input >> tmpx){
-		input >> tmpy >> str >> tmps;
-		pieces.emplace_back(tmpx,tmpy,str,tmps);
-	}
-	input.close();
-
-	return 0;
 }
 

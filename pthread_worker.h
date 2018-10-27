@@ -16,6 +16,9 @@ class pthread_worker:public parallel_worker
 private:
 	pthread_t m_pthread_id;
 	static void *thread_routine(void *arg);
+protected:
+	virtual bool receive_request_pdu(request_pdu_t &request);
+
 public:
 	pthread_worker();
 	~pthread_worker();

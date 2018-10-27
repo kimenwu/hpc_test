@@ -1,7 +1,6 @@
 /*
  * master.cpp
  *
- *  Created on: 2018Äê10ÔÂ19ÈÕ
  */
 #include <string.h>
 
@@ -10,7 +9,8 @@
 
 parallel_master::parallel_master()
 {
-
+	m_curr_rank = 1;
+	m_state.clear();
 }
 
 parallel_master::~parallel_master()
@@ -21,20 +21,16 @@ parallel_master::~parallel_master()
 /**
  * This function is used to caculate which worked to
  * handle this expaditon.
+ *
+ * We use round-robin mechanism to schedule all job
  */
-int parallel_master::get_worker_rank(int x,int y)
+int parallel_master::get_worker_rank()
 {
 	int rank_cnt = get_number_of_worker();
-	int rang_per_worker = MAX_X_RANGE/rank_cnt;
-	int rank = 0;
-
-	/**
-	 * rank id start from 1.
-	 */
-	rank = 1+x/rang_per_worker;
-
-	if(rank > rank_cnt){
-		rank = rank_cnt;
+	int rank = m_curr_rank;
+	m_curr_rank++;
+	if( m_curr_rank > rank_cnt ){
+		m_curr_rank = 1;
 	}
 
 	return rank;
@@ -46,13 +42,16 @@ int parallel_master::get_worker_rank(int x,int y)
 bool parallel_master::dispatch_walk_job(expadition &expa,int rank)
 {
 	request_pdu_t request;
-	request.direction	= expa.m_direction;
-	request.left_step	= expa.m_left_step;
-	request.id			= expa.m_id;
-	request.x			= expa.m_x;
-	request.y			= expa.m_y;
+	expadition_attribute_t *p_obj = &request.obj;
+
+	p_obj->direction	= expa.m_direction;
+	p_obj->left_step	= expa.m_left_step;
+	p_obj->id			= expa.m_id;
+	p_obj->x			= expa.m_x;
+	p_obj->y			= expa.m_y;
+	p_obj->status		= expa.m_status;
+
 	request.op			= REQUEST_DO_WALK;
-	request.status		= expa.m_status;
 
 	if(!this->send_request_pdu(&request,rank)){
 		parallel_error("send request error[rank:%d]",rank);
@@ -61,29 +60,12 @@ bool parallel_master::dispatch_walk_job(expadition &expa,int rank)
 	return true;
 }
 
-void
-parallel_master::redispatch_job(list<expadition> &expaditions,response_pdu_t &response_pdu)
-{
-	expadition *p_expa = NULL;
-	int rank = 0;
-	p_expa = stor_expadition(expaditions,response_pdu);
-	if(p_expa == NULL ){
-		parallel_error("can't find expadition[id:%d]",response_pdu.id);
-		return;
-	}
-
-	rank = get_worker_rank(p_expa->m_x,p_expa->m_y);
-	if(!dispatch_walk_job(*p_expa,rank)){
-		parallel_error("Dispatch walk job error");
-	}
-}
-
-
 int parallel_master::dispatch_all_walk_job(list<expadition> &expaditions)
 {
 	int rank = 0;
 	int scheduled_cnt = 0;
 
+	m_curr_rank = 1;
 	for(auto it = expaditions.begin();it != expaditions.end();it++){
 		expadition expa = *it;
 
@@ -92,7 +74,7 @@ int parallel_master::dispatch_all_walk_job(list<expadition> &expaditions)
 			continue;
 		}
 
-		rank = get_worker_rank(expa.m_x,expa.m_y);
+		rank = get_worker_rank();
 		if(!dispatch_walk_job(expa,rank)){
 			parallel_error("dispatch job error[x:%d,y:%d]",expa.m_x,expa.m_y);
 			goto out;
@@ -123,19 +105,22 @@ expadition*
 parallel_master::stor_expadition(list<expadition> &expaditions,response_pdu_t &response_pdu)
 {
 	expadition *p_expa = NULL;
+	expadition_attribute_t *p_obj;
 
+	//In this function assume that only one obj in a response.
 	//find the expadition
-	p_expa = find_expadition_byid(expaditions,response_pdu.id);
+	p_obj = &response_pdu.obj;
+	p_expa = find_expadition_byid(expaditions,p_obj->id);
 	if(!p_expa){
-		parallel_error("could find expadition %d",response_pdu.id);
+		parallel_error("could find expadition %d",p_obj->id);
 		goto out;
 	}
 
-	p_expa->m_left_step	= response_pdu.left_step;
-	p_expa->m_x			= response_pdu.x;
-	p_expa->m_y			= response_pdu.y;
-	p_expa->m_direction = response_pdu.direction;
-	p_expa->m_status	|= response_pdu.status;
+	p_expa->m_left_step	= p_obj->left_step;
+	p_expa->m_x			= p_obj->x;
+	p_expa->m_y			= p_obj->y;
+	p_expa->m_direction = p_obj->direction;
+	p_expa->m_status	|= p_obj->status;
 
 out:
 	return p_expa;
@@ -177,6 +162,23 @@ bool parallel_master::pre_start(int worker_cnt)
 	return true;
 }
 
+/**
+ * save_stat - save the stat to @m_stat member.
+ *
+ * This is called when the worker complete a expaditon walk in a second
+ */
+void parallel_master::save_state(expadition *p_exp)
+{
+	int idx = p_exp->m_y*MAX_X_RANGE + p_exp->m_x;
+
+	if(m_state.find(idx) == m_state.end()){
+		vector<expadition *> tmpvec{p_exp};
+		m_state.insert(make_pair(idx,tmpvec));
+	}else{
+		m_state[idx].push_back(p_exp);
+	}
+
+}
 
 /***
  * make_walk - dispatch all walking job to the work and wait for the walk finished.
@@ -186,6 +188,7 @@ bool parallel_master::make_walk(list<expadition> &expaditions)
 	bool ret = true;
 	int unfinished_cnt = 0;
 	response_pdu_t response;
+	expadition *p_exp = NULL;
 
 	//schedule job to walk
 	unfinished_cnt = dispatch_all_walk_job(expaditions);
@@ -212,63 +215,18 @@ bool parallel_master::make_walk(list<expadition> &expaditions)
 		switch (response.ret_code) {
 			case RESPONSE_WALK_FIN:
 				unfinished_cnt--;
-				break;
-			//If the x-coordinate out of the range that charged by the worker currently,
-			//The worker will ask to re-dispatch.
-			//That is implement by return a response with it's @ret_code equal to
-			//@RESPONSE_RE_DSIPATCH
-			case RESPONSE_RE_DISPATCH:
-				redispatch_job(expaditions,response);
+				p_exp = stor_expadition(expaditions,response);
+				if(!p_exp){
+					parallel_error("failed to stor expadition");
+					break;
+				}
+
+				save_state(p_exp);
 				break;
 			default:
 				parallel_error("response error[ret_code:%d]",
 					        response.ret_code);
 				ret = false;
-				goto out;
-				break;
-		}
-	}
-
-out:
-	return ret;
-}
-
-bool
-parallel_master::update_expadition(list<expadition> &expaditions,int expadition_cnt)
-{
-	int unfinished_cnt = expadition_cnt;
-
-	bool ret = true;
-	request_pdu_t pdu;
-	response_pdu_t response_pdu;
-
-	for(int i=1;i<=get_number_of_worker();i++)
-	{
-		memset(&pdu,0,sizeof(pdu));
-		pdu.op = REQUEST_GET_STAT;
-		this->send_request_pdu(&pdu,i);
-	}
-
-	while(unfinished_cnt){
-
-		memset(&response_pdu,0,sizeof(response_pdu));
-		if(!this->receive_response_pdu(response_pdu)){
-			parallel_error("receive response error");
-			ret = false;
-			break;
-		}
-
-		switch(response_pdu.ret_code){
-			case RESPONSE_GET_STAT_FIN:
-				unfinished_cnt--;
-				break;
-			case RESPONSE_STAT_INFO:
-				stor_expadition(expaditions,response_pdu);
-				break;
-			default:
-				parallel_error("response error[ret_code:%d]",response_pdu.ret_code);
-				ret = false;
-				goto out;
 				break;
 		}
 	}
@@ -290,6 +248,74 @@ void parallel_master::dump_all_rest_expaditon(list<expadition> &expaditions)
 	}
 }
 
+bool parallel_master::conflict_detect()
+{
+	bool ret = true;
+	request_pdu_t *p_req = NULL;
+	int attr_size = 0;
+	expadition_attribute_t *p_attr=NULL;
+	int rank = 0;
+	int unfinished = 0;
+	response_pdu_t response;
+
+	//reset rank number
+	m_curr_rank = 1;
+	for(auto item:m_state){
+		attr_size = (item.second.size()-1)*sizeof(expadition_attribute_t);
+		p_req = (request_pdu_t *)malloc(sizeof(request_pdu_t)+attr_size);
+		p_req->op = REQUEST_CONFLICT_DETECT;
+
+		p_attr = p_req->objs;
+		for(auto& exp:item.second){
+			exp->copy_to_attribute(p_attr);
+			p_attr++;
+		}
+
+		rank = get_worker_rank();
+		if(!send_request_pdu(p_req,rank)){
+			parallel_error("send request error[rank:%d]",rank);
+			ret = false;
+			goto out;
+		}
+
+		unfinished++;
+	}
+
+	//Get the result
+	while(unfinished){
+
+		if(!this->receive_response_pdu(response)){
+			parallel_error("failed to receive response");
+			goto out;
+		}
+		if(response.ret_code != RESPONSE_CONFLICT_DETECT_FIN){
+			parallel_error("unexpected ret_code:%d",response.ret_code);
+			continue;
+		}
+
+		//how to updatestate of expaditions
+		iterator_t it = m_state.find(response.indx);
+		if(it == m_state.end()){
+			parallel_error("bad index[index:response.indx]");
+			ret = false;
+			goto out;
+		}
+
+		//update the staus of the group expaditions
+		for(auto& item:(*it).second){
+			expadition &exp = *item;
+			if(exp.m_id != response.obj.id){
+				exp.m_status &= ~EXP_STATUS_LIVE;
+			}else{
+				exp.m_status |= EXP_STATUS_LIVE;
+			}
+		}
+	}
+
+out:
+	return ret;
+}
+
 /**
  * run the core job.
  */
@@ -302,21 +328,25 @@ parallel_master::run( int time,list<expadition> &expaditions,int expadition_cnt)
 
 	while(t){
 		t--;
+		m_state.clear();
 		if(!pre_start(worker_count)){
 			parallel_error("prestart error");
 			err_code = -1;
 			goto out;
 		}
 
+		//walk
 		if(!make_walk(expaditions)){
 			parallel_error("make walk error");
 			err_code = -1;
 			goto out;
 		}
 
-		if(!update_expadition(expaditions,expadition_cnt)){
+		//conflict detect
+		if(!conflict_detect()){
+			parallel_error("conflict detect error");
 			err_code = -1;
-			parallel_error("Get expadition count error");
+			goto out;
 		}
 	}
 

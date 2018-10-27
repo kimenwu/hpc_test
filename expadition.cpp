@@ -76,3 +76,14 @@ void expadition::dump_property()
 	parallel_debug("x:%d,\ty:%d,\tdirection:%s,\tspeed:%d",m_x,m_y,
 			direction_i2s(m_direction).c_str(),m_speed);
 }
+
+
+void expadition::copy_to_attribute(expadition_attribute_t *p_attr)
+{
+	p_attr->direction	= m_direction;
+	p_attr->id			= m_id;
+	p_attr->left_step	= m_left_step;
+	p_attr->status		= m_status;
+	p_attr->x			= m_x;
+	p_attr->y			= m_y;
+}

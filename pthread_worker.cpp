@@ -52,4 +52,9 @@ void pthread_worker::exit()
 	m_pthread_id = 0;
 }
 
+bool pthread_worker::receive_request_pdu(request_pdu_t &request)
+{
+	return true;
+}
+
 #endif

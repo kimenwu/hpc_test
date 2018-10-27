@@ -9,6 +9,7 @@
 #define MASTER_H_
 
 #include <list>
+#include <unordered_map>
 
 #include "expadition.h"
 #include "parallel.h"
@@ -18,7 +19,13 @@ using namespace std;
 class parallel_master
 {
 private:
-	int get_worker_rank(int x,int y);
+	/*current rank of the worker be scheduled this time*/
+	int m_curr_rank;
+	unordered_map<int,vector<expadition *>> m_state;
+	typedef typename unordered_map<int,vector<expadition *>>::iterator iterator_t;
+
+private:
+	int get_worker_rank();
 
 	bool dispatch_walk_job(expadition &expa,int rank);
 	int dispatch_all_walk_job(list<expadition> &expaditions);
@@ -30,11 +37,14 @@ private:
 	bool update_expadition(list<expadition> &expaditions,int expadition_cnt);
 	expadition *find_expadition_byid(list<expadition> &expaditions,int id);
 
+	void save_state(expadition *p_exp);
+
 	bool pre_start(int worker_cnt);
 	void stop_workers(int worker_cnt);
 
 	bool make_walk(list<expadition> &expaditions);
 
+	bool conflict_detect();
 protected:
 	virtual int get_number_of_worker() = 0;
 

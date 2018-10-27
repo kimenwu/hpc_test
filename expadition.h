@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 
+#include "parallel.h"
+
 using namespace std;
 
 #define EXP_STATUS_LIVE (1)
@@ -23,7 +25,6 @@ public:
 	int m_speed;
 	int m_direction;
 	int m_id;
-
 	/**
 	 * the status of a expadition.this is use to stor runtime staus like live or
 	 * dead because of conflict with the other expaditon.
@@ -55,14 +56,14 @@ public:
 	~expadition();
 
 	string direction_tostring();
-
+	void copy_to_attribute( expadition_attribute_t *p_attr);
 	int get_id()
 	{
 		return m_id;
 	}
 
 	/**
-	 * Print all property of a expaditon
+//	 * Print all property of a expaditon
 	 */
 	void dump_property();
 
