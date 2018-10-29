@@ -38,7 +38,7 @@ private:
 	 * file,this variable is represent as a string but in the run time it is a
 	 * integer.
 	 */
-	const vector<string> STR_DIR = {"U","L","LU","LD","D","D","RD","RU"};
+	const vector<string> STR_DIR = {"U","L","LU","LD","D","R","RD","RU"};
 
 	int direction_s2i(const string str_direction);
 	string direction_i2s(int direction);

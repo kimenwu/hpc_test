@@ -57,6 +57,6 @@ void config::load_config(const char *p)
 		m_expaditon_cnt++;
 	}
 
-	dump_all_expaditions();
 	config_stream.close();
+	dump_all_expaditions();
 }

@@ -1,10 +1,12 @@
 #include <pthread.h>
 #include <queue>
 
+#ifndef __PTHREAD_CONNECTOR__
+#define __PTHREAD_CONNECTOR__
 using namespace std;
 
 
-typedef struct pdu_elment_s{
+typedef struct pdu_elment_s {
 	int size;
 	char *data; /*the data stor in the buffer*/		
 } pdu_elment_t;
@@ -19,6 +21,8 @@ private:
 public:
 	pthread_connector();
 	~pthread_connector();
-	bool send_to_me(char *data,int size);
+	bool send_to_me(char *data,unsigned int size);
 	bool receive(char *data,int size);
 };
+
+#endif

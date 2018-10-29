@@ -6,11 +6,11 @@
 #include <vector>
 #include <string>
 
+#include "pthread_worker.h"
 #include "parallel.h"
 #include "config.h"
 #include "master.h"
 #include "worker.h"
-#include "pthread_worker.h"
 
 #ifdef PTHREAD_TEST
 #include "pthread_master.h"
@@ -71,8 +71,9 @@ parallel_worker* create_worker()
 
 }
 
+config cfg;
+
 int main(int argc,char **argv){
-	config cfg;
 	int errcode = 0;
 	bool b_master = false;
 	parallel_master *p_master = NULL;

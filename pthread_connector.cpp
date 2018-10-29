@@ -18,7 +18,7 @@ pthread_connector::~pthread_connector()
 	pthread_cond_destroy(&m_buf_cond);
 }
 
-bool pthread_connector::send_to_me(char *data,int size)
+bool pthread_connector::send_to_me(char *data,unsigned int size)
 {
 	int buf_size = 0;
 	char *buf = NULL;
@@ -28,7 +28,6 @@ bool pthread_connector::send_to_me(char *data,int size)
 		return false;
 	}
 
-	pthread_mutex_lock(&m_buf_lock);
 	//alloc memory to stor the struct and the buf
 	//in term of performance,we allocate two partition altogether
 	buf_size = sizeof(pdu_elment_t)+size;

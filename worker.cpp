@@ -61,6 +61,7 @@ bool parallel_worker::do_conflict_detect(request_pdu_t &request)
 	bool alive = true;
 	int min_speed = request.objs[0].speed;
 	response_pdu_t response;
+	memset(&response,0,sizeof(response));
 	expadition_attribute_t *attr = &request.objs[0];
 
 	for(int i=1;i<obj_cnt;i++){
@@ -75,14 +76,14 @@ bool parallel_worker::do_conflict_detect(request_pdu_t &request)
 		}
 	}
 
-	memset(&response,0,sizeof(response));
-	response.ret_code = RESPONSE_CONFLICT_DETECT_FIN;
-	response.indx = request.index;
+
 	if(alive){
 		expadition(*attr).copy_to_attribute(&response.obj);
 	}else{
 		response.obj.id = EXP_INVALID_ID;
 	}
+	response.ret_code = RESPONSE_CONFLICT_DETECT_FIN;
+	response.indx = request.index;
 
 	if(!this->send_response_pdu(response)){
 		parallel_error("send response error");
@@ -116,6 +117,7 @@ bool parallel_worker::process_request(request_pdu_t &request)
 			if(!do_conflict_detect(request)){
 				parallel_error("do conflict detect failed");
 			}
+			break;
 		default:
 			parallel_error("could not recognise opcode:%d",request.op);
 			break;
@@ -136,7 +138,7 @@ int parallel_worker::run()
 	int err_code = 0;
 	bool should_stop = false;
 	request_pdu_t default_request,*p_req;
-	m_next_pdu_obj_cnt = 0;
+	m_next_pdu_obj_cnt = DEFAULT_OBJ_CNT;
 	int size = 0;
 
 	while(!should_stop){
@@ -150,6 +152,7 @@ int parallel_worker::run()
 			}
 		}else{
 			p_req = &default_request;
+			size = sizeof(request_pdu_t);
 		}
 
 		if(!this->receive_request_pdu(p_req,size)){
@@ -164,6 +167,8 @@ int parallel_worker::run()
 			p_req = NULL;
 		}
 	}
+
+	parallel_debug("the worker is exit")
 
 out:
 	return err_code;

@@ -44,12 +44,16 @@ bool parallel_master::dispatch_walk_job(expadition &expa,int rank)
 	request_pdu_t request;
 	expadition_attribute_t *p_obj = &request.obj;
 
+	memset(&request,0,sizeof(request));
+
+	request.obj_cnt		= 1;
 	p_obj->direction	= expa.m_direction;
 	p_obj->speed		= expa.m_speed;
 	p_obj->id			= expa.m_id;
 	p_obj->x			= expa.m_x;
 	p_obj->y			= expa.m_y;
 	p_obj->status		= expa.m_status;
+	p_obj->indx			= 0;
 
 	request.op			= REQUEST_DO_WALK;
 
@@ -91,10 +95,12 @@ expadition*
 parallel_master::find_expadition_byid(list<expadition> &expaditions,int id)
 {
 	expadition *p_item = NULL;
-	for(auto it = expaditions.begin();it != expaditions.end();it++){
-		expadition &exp = *it;
+	//for(auto it = expaditions.begin();it != expaditions.end();it++){
+	for(auto& exp:expaditions){
+//		expadition &exp = *it;
 		if(id == exp.get_id()){
 			p_item = &exp;
+			break;
 		}
 	}
 
@@ -198,6 +204,8 @@ bool parallel_master::make_walk(list<expadition> &expaditions)
 		goto out;
 	}
 
+	parallel_debug("send all job need to be process[%d]",unfinished_cnt);
+
 	// wait for walking finished
 	//
 	// TODO: If there is an error occur on a worker,the expadintion belong to
@@ -215,12 +223,14 @@ bool parallel_master::make_walk(list<expadition> &expaditions)
 		switch (response.ret_code) {
 			case RESPONSE_WALK_FIN:
 				unfinished_cnt--;
+
 				p_exp = stor_expadition(expaditions,response);
 				if(!p_exp){
 					parallel_error("failed to stor expadition");
 					break;
 				}
 
+				parallel_debug("receive response:%d,unfinished:%d",response.obj.id,unfinished_cnt);
 				save_state(p_exp);
 				break;
 			default:
@@ -262,6 +272,7 @@ bool parallel_master::conflict_detect()
 	//reset rank number
 	m_curr_rank = 1;
 	for(auto item:m_state){
+		memset(&req_next_size,0,sizeof(req_next_size));
 		rank = get_worker_rank();
 		req_next_size.op = REQUEST_NEXT_PDU_SIZE;
 		req_next_size.obj_cnt = item.second.size();
@@ -274,7 +285,10 @@ bool parallel_master::conflict_detect()
 
 		attr_size = (item.second.size()-1)*sizeof(expadition_attribute_t);
 		p_req = (request_pdu_t *)malloc(sizeof(request_pdu_t)+attr_size);
+		memset(p_req,0,sizeof(request_pdu_t)+attr_size);
 		p_req->op = REQUEST_CONFLICT_DETECT;
+		p_req->obj_cnt = item.second.size();
+		p_req->index = item.first;;
 
 		p_attr = p_req->objs;
 		p_attr->indx = item.first;
@@ -309,7 +323,7 @@ bool parallel_master::conflict_detect()
 		//how to updatestate of expaditions
 		iterator_t it = m_state.find(response.indx);
 		if(it == m_state.end()){
-			parallel_error("bad index[index:response.indx]");
+			parallel_error("bad index[index:%d]",response.indx);
 			ret = false;
 			goto out;
 		}
@@ -323,6 +337,8 @@ bool parallel_master::conflict_detect()
 				exp.m_status |= EXP_STATUS_LIVE;
 			}
 		}
+
+		unfinished--;
 	}
 
 out:
@@ -380,6 +396,7 @@ void parallel_master::stop_workers(int worker_cnt)
 	memset(&request,0,sizeof(request));
 	request.op = REQUEST_STOP;
 
+	parallel_debug("there are %d threads need to stop",worker_cnt);
 	for(int i=1;i<=worker_cnt;i++){
 		if(!this->send_request_pdu(&request,i)){
 			parallel_error("send pdu error");

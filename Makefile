@@ -24,7 +24,7 @@ endif
 ifeq ($(TARGET),)
 
 .PHONY: all pthread_test mpi_test
-all: pthread_test mpi_test
+all: pthread_test
 
 pthread_test:
 	@rm -rf *.o
@@ -32,6 +32,9 @@ pthread_test:
 mpi_test:
 	@rm -rf *.o
 	$(MAKE) -C . TARGET="mpi_test" build
+cscope:
+	find -name "*.cpp" -or -name "*.h" > cscope.files
+	cscope -qb
 else
 
 build:$(TARGET)
@@ -53,3 +56,4 @@ clean:
 	rm -fr *.o
 	rm -rf pthread_test mpi_test
 	rm -rf core.*
+	rm -rf cscope.* cscope.*.*

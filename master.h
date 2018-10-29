@@ -47,7 +47,7 @@ private:
 protected:
 	virtual int get_number_of_worker() = 0;
 
-	virtual bool send_request_pdu(request_pdu_t *p_pdu,int rank) = 0;
+	virtual bool send_request_pdu(request_pdu_t *p_pdu,unsigned int rank) = 0;
 	virtual bool receive_response_pdu(response_pdu_t &response_pdu) = 0;
 
 public:

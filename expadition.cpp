@@ -27,6 +27,7 @@ expadition::expadition(expadition_attribute_t &attr)
 	m_status	= attr.status;
 	m_x			= attr.x;
 	m_y			= attr.y;
+	m_status	= EXP_STATUS_LIVE;
 }
 
 
@@ -42,6 +43,7 @@ expadition::expadition(int x,int y,const string str_direction,int speed,int id)
 	m_direction = direction_s2i(str_direction);
 	m_speed = speed;
 	m_id = id;
+	m_status = EXP_STATUS_LIVE;
 }
 
 /**
@@ -84,7 +86,7 @@ string expadition::direction_i2s(int direction)
 
 void expadition::dump_property()
 {
-	parallel_debug("x:%d,\ty:%d,\tdirection:%s,\tspeed:%d",m_x,m_y,
+	parallel_debug("id:%d\tx:%d,\ty:%d,\tdirection:%s,\tspeed:%d",m_id,m_x,m_y,
 			direction_i2s(m_direction).c_str(),m_speed);
 }
 
