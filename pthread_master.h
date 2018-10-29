@@ -32,7 +32,7 @@ public:
 	virtual void exit();
 	virtual bool init();
 	virtual int get_number_of_worker();
-	virtual bool send_request_pdu(request_pdu_t*, int);
+	virtual bool send_request_pdu(request_pdu_t* p_req, int bank);
 	virtual bool receive_response_pdu(response_pdu_t &response_pdu);
 };
 

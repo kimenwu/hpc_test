@@ -79,7 +79,7 @@ err:
 	return ret;
 }
 
-bool pthread_master::send_request_pdu(request_pdu_t*, int)
+bool pthread_master::send_request_pdu(request_pdu_t *p_req, int bank)
 {
 	return true;
 }

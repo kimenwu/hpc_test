@@ -266,7 +266,7 @@ bool parallel_master::conflict_detect()
 		req_next_size.op = REQUEST_NEXT_PDU_SIZE;
 		req_next_size.obj_cnt = item.second.size();
 
-		if(!send_request_pdu(&req_next_size,rank)){
+		if(!this->send_request_pdu(&req_next_size,rank)){
 			parallel_error("send request error[rank:%d]",rank);
 			ret = false;
 			goto out;
@@ -281,6 +281,12 @@ bool parallel_master::conflict_detect()
 		for(auto& exp:item.second){
 			exp->copy_to_attribute(p_attr);
 			p_attr++;
+		}
+
+		if(!this->send_request_pdu(p_req,rank)){
+			parallel_error("send request error[rank:%d]",rank);
+			ret = false;
+			goto out;
 		}
 
 		free(p_req);

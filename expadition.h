@@ -44,6 +44,7 @@ private:
 	string direction_i2s(int direction);
 	void do_walk_once();
 	void redirection();
+
 public:
 	expadition();
 	expadition(int x, int y,const string str_direction,int speed,int id);

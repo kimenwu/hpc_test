@@ -141,7 +141,7 @@ int parallel_worker::run()
 
 	while(!should_stop){
 		if(m_next_pdu_obj_cnt != DEFAULT_OBJ_CNT){
-			size = sizeof(request_pdu_t)+m_next_pdu_obj_cnt*sizeof(expadition_attribute_t);
+			size = sizeof(request_pdu_t)+(m_next_pdu_obj_cnt-1)*sizeof(expadition_attribute_t);
 			p_req = (request_pdu_t *)malloc(size);
 			if(!p_req){
 				parallel_error("alloce memory error");

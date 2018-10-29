@@ -39,3 +39,10 @@ mpi_test
 .project
 .vs
 ref.txt
+
+#cscope file
+cscope.files
+cscope.in.out
+cscope.out
+cscope.po.out
+
