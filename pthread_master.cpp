@@ -95,16 +95,16 @@ pthread_worker *pthread_master::get_worker_by_id(unsigned int id)
 
 bool pthread_master::send_request_pdu(request_pdu_t *p_req, unsigned int rank)
 {
-	int size = 0;
 	pthread_worker *p_worker = NULL;
+	int size = 0;
 
 	p_worker = get_worker_by_id(rank);
-
-	if(p_req->obj_cnt > 1){
-		size = sizeof(request_pdu_t)+(p_req->obj_cnt-1)*sizeof(expadition_attribute_t);
+	if(p_req->obj_cnt > 1 && p_req->op != REQUEST_NEXT_PDU_SIZE){
+		size = sizeof(request_pdu_t)+ (p_req->obj_cnt-1)*sizeof(expadition_attribute_t);
 	}else{
-		size = sizeof(request_pdu_t);
+		size = sizeof(request_pdu_t); 
 	}
+
 	return p_worker->send_to_me((char *)p_req,size);
 }
 

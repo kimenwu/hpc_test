@@ -54,8 +54,12 @@ bool parallel_master::dispatch_walk_job(expadition &expa,int rank)
 	p_obj->y			= expa.m_y;
 	p_obj->status		= expa.m_status;
 	p_obj->indx			= 0;
-
+	p_obj->p_expadition	= &expa;
 	request.op			= REQUEST_DO_WALK;
+
+	if(p_obj->p_expadition->m_id != expa.m_id){
+		PARALLEL_BUG();
+	}
 
 	if(!this->send_request_pdu(&request,rank)){
 		parallel_error("send request error[rank:%d]",rank);
@@ -71,7 +75,7 @@ int parallel_master::dispatch_all_walk_job(list<expadition> &expaditions)
 
 	m_curr_rank = 1;
 	for(auto it = expaditions.begin();it != expaditions.end();it++){
-		expadition expa = *it;
+		expadition &expa = *it;
 
 		/*If the expaditon is dead,we need not schedule*/
 		if(!(expa.m_status & EXP_STATUS_LIVE) ){
@@ -112,13 +116,30 @@ parallel_master::stor_expadition(list<expadition> &expaditions,response_pdu_t &r
 {
 	expadition *p_expa = NULL;
 	expadition_attribute_t *p_obj;
-
+	
+	if(response_pdu.obj_cnt != DEFAULT_OBJ_CNT){
+		parallel_error("bad obj count.this function assume that "
+						"the obj_cnt of the response_pdu is 1");
+	}
+	
 	//In this function assume that only one obj in a response.
 	//find the expadition
 	p_obj = &response_pdu.obj;
-	p_expa = find_expadition_byid(expaditions,p_obj->id);
+	if(p_obj->p_expadition){
+		p_expa = p_obj->p_expadition;
+	}else{
+		//do slowing find
+		p_expa = find_expadition_byid(expaditions,p_obj->id);
+	}
+
 	if(!p_expa){
 		parallel_error("could find expadition %d",p_obj->id);
+		goto out;
+	}
+
+	if(p_expa->m_id != p_obj->id){
+		parallel_error("Get wrong expadition,expect id:%d,but %d",p_obj->id,p_expa->m_id);
+		PARALLEL_BUG();
 		goto out;
 	}
 
@@ -177,13 +198,20 @@ void parallel_master::save_state(expadition *p_exp)
 {
 	int idx = p_exp->m_y*MAX_X_RANGE + p_exp->m_x;
 
+	/**
+	 * operator[] will add element atomaticly if there is a key of an element
+	 * match idx
+	 */
+	m_state[idx].push_back(p_exp);
+
+/*
 	if(m_state.find(idx) == m_state.end()){
 		vector<expadition *> tmpvec{p_exp};
 		m_state.insert(make_pair(idx,tmpvec));
 	}else{
 		m_state[idx].push_back(p_exp);
 	}
-
+*/
 }
 
 /***
@@ -230,7 +258,6 @@ bool parallel_master::make_walk(list<expadition> &expaditions)
 					break;
 				}
 
-				parallel_debug("receive response:%d,unfinished:%d",response.obj.id,unfinished_cnt);
 				save_state(p_exp);
 				break;
 			default:
@@ -320,7 +347,7 @@ bool parallel_master::conflict_detect()
 			continue;
 		}
 
-		//how to updatestate of expaditions
+		//how to update state of expaditions
 		iterator_t it = m_state.find(response.indx);
 		if(it == m_state.end()){
 			parallel_error("bad index[index:%d]",response.indx);
@@ -358,22 +385,28 @@ parallel_master::run( int time,list<expadition> &expaditions,int expadition_cnt)
 	while(t){
 		t--;
 		m_state.clear();
+		parallel_debug("pre_start");
 		if(!pre_start(worker_count)){
 			parallel_error("prestart error");
+			PARALLEL_BUG();
 			err_code = -1;
 			goto out;
 		}
 
 		//walk
+		parallel_debug("make_walk");
 		if(!make_walk(expaditions)){
 			parallel_error("make walk error");
+			PARALLEL_BUG();
 			err_code = -1;
 			goto out;
 		}
 
 		//conflict detect
+		parallel_debug("conflict_detect");
 		if(!conflict_detect()){
 			parallel_error("conflict detect error");
+			PARALLEL_BUG();
 			err_code = -1;
 			goto out;
 		}

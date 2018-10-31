@@ -10,12 +10,12 @@
 #include "parallel.h"
 #include "execinfo.h"
 
-#define DEFAULT_OBJ_CNT (1)
-
 class parallel_worker
 {
 private:
 	int m_next_pdu_obj_cnt;
+	//used for debug
+	int m_privious_command;
 	bool process_request(request_pdu_t &request);
 	void do_stop();
 	bool do_walk(request_pdu_t &request);

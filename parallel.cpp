@@ -79,11 +79,13 @@ int main(int argc,char **argv){
 	parallel_master *p_master = NULL;
 	parallel_worker *worker = NULL;
 
+	parallel_debug("loading config");
 	cfg.load_config(DEFAULT_CONFIG_PATH);
+
 	int T = cfg.get_run_period();
 	b_master = is_master();
 	if(b_master){
-
+		parallel_debug("create master");
 		p_master = create_master();
 		if(!p_master){
 			parallel_error("create master failed");
@@ -91,6 +93,7 @@ int main(int argc,char **argv){
 			goto err;
 		}
 
+		parallel_debug("running job");
 		errcode = p_master->run(T,cfg.get_expaditions(),cfg.get_expaditon_cnt());
 		if(errcode){
 			parallel_error("run the paralle task error");

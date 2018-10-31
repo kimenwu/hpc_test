@@ -24,7 +24,7 @@ endif
 ifeq ($(TARGET),)
 
 .PHONY: all pthread_test mpi_test
-all: pthread_test
+all: cscope pthread_test
 
 pthread_test:
 	@rm -rf *.o

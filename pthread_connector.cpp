@@ -72,6 +72,7 @@ bool pthread_connector::receive(char *data,int size)
 	if(p_pdu->size != size){
 		parallel_error("expacted a continous memory is %d,rather than %d",
 				p_pdu->size,size);
+		PARALLEL_BUG();
 		goto err;
 	}
 

@@ -8,6 +8,8 @@
 #define PARALLEL_H_
 #include <iostream>
 
+class expadition;
+
 typedef enum request_op_code
 {
 	REQUEST_DO_WALK = 1,
@@ -26,6 +28,11 @@ typedef struct expadition_attribute{
 	int x;
 	int y;
 	int direction;
+
+	/*This pointer is send to worked and respon correctly*/
+	/*We use this pointer to find the object stor in @cfig.expadition*/
+	/*this feild used in REQUEST_DO_WALK*/
+	expadition *p_expadition;
 } expadition_attribute_t;
 
 typedef struct request_pdu_s
@@ -91,15 +98,23 @@ enum DIRC {u,l,lu,ld,d,r,rd,ru};
 #define PTHREAD_WORKER_CNT (5)
 #endif
 
+#define DEFAULT_OBJ_CNT (1)
+
 #define parallel_error(format,...)				\
 	printf("[%s:%d]" format "\n",__FILE__,__LINE__,##__VA_ARGS__);
 
 #ifdef DEBUG
 #define parallel_debug(format,...) 				\
 	printf("[%s:%d:%s]" format "\n",__FILE__,__LINE__,__FUNCTION__,##__VA_ARGS__);
+#define PARALLEL_BUG() do{				\
+		int *___parallel_bug = NULL; 	\
+		*___parallel_bug = 0x1; 						\
+		}while(0)
 #else
 #define parallel_debug(format,...)
-
+#define PARALLEL_BUG()
 #endif
+
+#define PARALLEBUG
 
 #endif /* PARALLEL_H_ */
